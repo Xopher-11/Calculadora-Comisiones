@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Calculadora de comisiones</title>
+<style>
+    *{box-sizing:border-box;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif}
+    body{margin:0;background:linear-gradient(135deg, #f0f4ff 0%, #f9f0ff 100%);color:#2d3748; min-height: 100vh;}
+    .wrap{max-width:1000px;margin:0 auto;padding:30px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .card{background:rgba(255, 255, 255, 0.9);border:1px solid #e2e8f0;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:24px;backdrop-filter: blur(10px);}
+    .hero{grid-column: 1 / -1; text-align: center; background: linear-gradient(135deg, #ffffff, #edf2ff); border-bottom: 4px solid #cbd5e0;}
+    
+    h1{margin:0 0 10px;font-size:32px; color: #4a5568}
+    .sub{margin:0 0 20px;color:#718096;font-size: 16px}
+    
+    /* Zona de países debajo del título */
+    .rates{display:flex; flex-wrap: wrap; justify-content: center; gap:12px; margin-top:10px}
+    .rate{padding:10px 18px;border-radius:15px;background:#fff;border:2px solid #e2e8f0;text-align:center; transition: transform 0.2s;}
+    .rate:hover {transform: translateY(-3px); border-color: #a3bffa;}
+    .rate span{display:block;font-weight:700;color: #5a67d8; font-size: 14px}
+    .rate strong{font-size:18px; color: #2d3748}
+
+    .zone-title{margin:0 0 12px;font-size:19px; font-weight: 800; color: #4a5568}
+    .note{margin:0 0 16px;color:#718096;font-size:14px}
+    
+    .form{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .full{grid-column:1/-1}
+    label{display:block;margin:0 0 8px;font-weight:700;font-size:14px; color: #4a5568}
+    input,select{width:100%;padding:12px;border-radius:12px;border:2px solid #e2e8f0;font-size:15px; background: #fdfdff}
+    input:focus,select:focus{outline:none;border-color:#b2b7ff;box-shadow:0 0 0 3px rgba(180,188,255,0.2)}
+    
+    .row{display:flex;gap:12px;margin-top:20px}
+    button{flex:1; padding:14px; border-radius:12px; border:none; font-weight:700; cursor:pointer; font-size:15px; transition: all 0.2s}
+    .primary{background:#667eea;color:#fff; box-shadow: 0 4px 12px rgba(102,126,234,0.3)}
+    .soft{background:#edf2ff;color:#4c51bf}
+    button:hover{filter: brightness(1.05); transform: translateY(-1px)}
+    
+    .msg{margin-top:16px;padding:12px;border-radius:12px;display:none; font-size: 14px; font-weight: 500}
+    .err{background:#fff5f5; border:1px solid #feb2b2; color:#c53030}
+    .ok{background:#f0fff4; border:1px solid #9ae6b4; color:#276749}
+
+    .result{padding:20px;border-radius:18px;background:#f8faff;border:2px solid #ebf4ff}
+    .mini{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}
+    .mini div, .item{padding:14px;border-radius:12px;background:#fff;border:1px solid #e2e8f0}
+    .mini span, .item span{display:block;color:#718096;font-size:12px;text-transform: uppercase; letter-spacing: 0.5px; margin-bottom:4px}
+    .mini strong, .item strong{font-size:20px; color: #2d3748}
+    
+    .stats{display:grid;gap:10px;margin-top:12px}
+    .item{display:flex;justify-content:space-between;align-items:center}
+    .calc{margin-top:15px;padding:15px;border-radius:12px;background:#fff;border:1px dashed #cbd5e0; font-family: 'Courier New', Courier, monospace; font-size:13px; color: #4a5568}
+    
+    .bar{height:12px;border-radius:10px;background:#edf2ff;overflow:hidden;margin-top:15px; border: 1px solid #e2e8f0}
+    .fill{height:100%;width:0;background:linear-gradient(90deg,#667eea,#764ba2);transition:width .4s ease}
+
+    @media (max-width:850px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+    <div class="grid">
+        <section class="card hero">
+            <h1>Calculadora de comisiones</h1>
+            <p class="sub">Gestión de ventas y cálculos automáticos por país</p>
+            <div class="rates" id="rates"></div>
+        </section>
+
+        <section class="card">
+            <div class="zone-title"><strong>Detalles y cálculos</strong></div>
+            <p class="note">Ingresa los montos para procesar la comisión.</p>
+            <div class="form">
+                <div class="full">
+                    <label for="pais">Seleccionar País</label>
+                    <select id="pais"></select>
+                </div>
+                <div>
+                    <label for="ventas">Ventas totales</label>
+                    <input id="ventas" type="number" min="0" step="0.01" placeholder="0.00" />
+                </div>
+                <div>
+                    <label for="descuentos">Descuentos</label>
+                    <input id="descuentos" type="number" min="0" step="0.01" placeholder="0.00" />
+                </div>
+            </div>
+
+            <div class="row">
+                <button class="primary" type="button" onclick="calcular()">Calcular Ahora</button>
+                <button class="soft" type="button" onclick="limpiar()">Limpiar</button>
+            </div>
+            <div id="msg" class="msg"></div>
+        </section>
+
+        <section class="card">
+            <div class="zone-title"><strong>Resultado del análisis</strong></div>
+            <div class="result" id="res">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin:0;font-size:20px; color:#4c51bf">Resumen</h2>
+                    <span id="paisSel" style="font-weight:700; color:#667eea">---</span>
+                </div>
+                
+                <div class="mini">
+                    <div><span>Ventas netas</span><strong id="netas">$0.00</strong></div>
+                    <div><span>Tasa Aplicada</span><strong id="porc">0%</strong></div>
+                </div>
+                <div class="stats">
+                    <div class="item"><span>Bruto</span><strong id="vTotal" style="font-size:15px">$0.00</strong></div>
+                    <div class="item"><span>Comisión Final</span><strong id="comi" style="color:#5a67d8">$0.00</strong></div>
+                </div>
+                <div class="bar"><div class="fill" id="fill"></div></div>
+                <div class="calc" id="detalle">Los detalles del cálculo aparecerán aquí.</div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+const tasas={India:.10, US:.15, UK:.12, Canadá:.11, México:.09};
+const $=id=>document.getElementById(id);
+const money=n=>n.toLocaleString('en-US',{style:'currency',currency:'USD'});
+const paises=Object.keys(tasas);
+
+function cargarPaises(){
+    $('pais').innerHTML='<option value="">Seleccione un país...</option>'+paises.map(p=>`<option value="${p}">${p}</option>`).join('');
+    $('rates').innerHTML=paises.map(p=>`<div class="rate"><span>${p}</span><strong>${(tasas[p]*100).toFixed(0)}%</strong></div>`).join('');
+}
+
+function val(){ return {p:$('pais').value, v:+$('ventas').value, d:+$('descuentos').value} }
+
+function error(x){ 
+    if(!x.p) return 'Por favor, selecciona un país.';
+    if(x.v <= 0) return 'Ingresa un monto de ventas válido.';
+    if(x.d > x.v) return 'Los descuentos no pueden superar las ventas.';
+    return ''; 
+}
+
+function setMsg(t, ok=false){ 
+    const m=$('msg'); 
+    m.className='msg '+(ok?'ok':'err'); 
+    m.textContent=t; 
+    m.style.display='block';
+}
+
+function actualizar(){
+    const x=val(), e=error(x);
+    $('paisSel').textContent = x.p || "---";
+    
+    if(e){
+        $('netas').textContent='$0.00'; $('porc').textContent='0%'; 
+        $('vTotal').textContent='$0.00'; $('comi').textContent='$0.00';
+        $('detalle').textContent=e; $('fill').style.width='0%';
+        return;
+    }
+    
+    const n=x.v-x.d, t=tasas[x.p], c=n*t;
+    $('netas').textContent=money(n);
+    $('porc').textContent=(t*100).toFixed(0)+'%';
+    $('vTotal').textContent=money(x.v);
+    $('comi').textContent=money(c);
+    $('detalle').innerHTML=`Base: ${money(x.v)} - ${money(x.d)} = ${money(n)}<br>Cálculo: ${money(n)} × ${(t*100).toFixed(0)}% = ${money(c)}`;
+    $('fill').style.width=(Math.min((n/x.v)*100,100))+'%';
+}
+
+function calcular(){ 
+    const x=val(), e=error(x); 
+    if(e) { setMsg(e, false); } 
+    else { setMsg('¡Cálculo realizado con éxito!', true); }
+    actualizar(); 
+}
+
+function limpiar(){ 
+    $('pais').value=''; $('ventas').value=''; $('descuentos').value=''; 
+    $('msg').style.display='none'; 
+    actualizar();
+}
+
+cargarPaises();
+</script>
+</body>
+</html>
